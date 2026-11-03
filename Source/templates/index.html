@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Spelling Bee Clone</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .container {
+            width: 450px;
+            background-color: #ffffff;
+            border: 2px solid #ccc;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .top-nav a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .top-nav a:hover {
+            text-decoration: underline;
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .word-box {
+            font-size: 24px;
+            font-weight: bold;
+            height: 40px;
+            border: 1px solid #aaa;
+            margin-bottom: 20px;
+            padding: 5px;
+            text-align: center;
+            background-color: #fafafa;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .center-letter {
+            color: #d9a000;
+        }
+
+        .hive {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .hive-row {
+            margin-bottom: 5px;
+        }
+
+        .letter-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            font-weight: bold;
+            background-color: #e0e0e0;
+            border: 1px solid #999;
+            cursor: pointer;
+            margin: 2px;
+            border-radius: 4px;
+        }
+
+        .letter-btn:hover {
+            background-color: #d0d0d0;
+        }
+
+        .center-btn {
+            background-color: #f7da21;
+        }
+
+        .center-btn:hover {
+            background-color: #e5c810;
+        }
+
+        .action-btns {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            padding: 8px 15px;
+            font-size: 14px;
+            margin: 0 3px;
+            cursor: pointer;
+            background-color: #e0e0e0;
+            border: 1px solid #999;
+        }
+
+        .action-btn:hover {
+            background-color: #d0d0d0;
+        }
+
+        .word-list-section {
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+            margin-bottom: 20px;
+        }
+
+        .found-words {
+            list-style-type: square;
+            padding-left: 20px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .message-box {
+            text-align: center;
+            font-size: 13px;
+            color: #d90000;
+            height: 20px;
+            margin-bottom: 10px;
+        }
+
+        .nav-section {
+            text-align: center;
+            border-top: 1px dashed #ccc;
+            padding-top: 15px;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #e0e0e0;
+            border: 1px solid #999;
+            color: #000;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .btn-link:hover {
+            background-color: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Top Navigation Links -->
+        <div class="top-nav">
+            {% if username %}
+                <span>Logged in as: <strong>{{ username }}</strong></span> | 
+                <a href="{{ url_for('logout') }}">Log Out</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Log In</a> | 
+                <a href="{{ url_for('signup') }}">Sign Up</a>
+            {% endif %}
+        </div>
+
+        <h1>Spelling Bee</h1>
+        
+        <!-- Current Score Display -->
+        <div class="score-display">Score: <span id="current-score">0</span></div>
+
+        <!-- Where typed letters appear -->
+        <div class="word-box" id="word-box"></div>
+
+        <!-- Feedback Message -->
+        <div class="message-box" id="message"></div>
+
+        <!-- Honeycomb Layout -->
+        <div class="hive">
+            <div class="hive-row" id="top-hive">
+                <button class="letter-btn outer-letter" onclick="addLetter('E')">E</button>
+                <button class="letter-btn outer-letter" onclick="addLetter('T')">T</button>
+            </div>
+            <div class="hive-row" id="middle-hive">
+                <button class="letter-btn outer-letter" onclick="addLetter('L')">L</button>
+                <button class="letter-btn center-btn" onclick="addLetter('K')">K</button>
+                <button class="letter-btn outer-letter" onclick="addLetter('A')">A</button>
+            </div>
+            <div class="hive-row" id="bottom-hive">
+                <button class="letter-btn outer-letter" onclick="addLetter('B')">B</button>
+                <button class="letter-btn outer-letter" onclick="addLetter('S')">S</button>
+            </div>
+        </div>
+
+        <!-- Action Controls -->
+        <div class="action-btns">
+            <button class="action-btn" onclick="deleteLetter()">Delete</button>
+            <button class="action-btn" onclick="shuffleLetters()">Shuffle</button>
+            <button class="action-btn" onclick="submitWord()">Enter</button>
+        </div>
+
+        <!-- Found Words Section -->
+        <div class="word-list-section">
+            <h3>Words Found (<span id="word-count">0</span>)</h3>
+            <ul class="found-words" id="found-words-list">
+                <!-- Dynamically populated found words -->
+            </ul>
+        </div>
+
+        <!-- Navigation Link to Leaderboard -->
+        <div class="nav-section">
+            <a href="{{ url_for('leaderboard') }}" class="btn-link">View Leaderboard</a>
+        </div>
+    </div>
+
+    <script>
+        let currentWord = '';
+        const centerLetter = 'K';
+        let foundWords = [];
+        let score = 0;
+
+        // Boolean check for login status
+        const isLoggedIn = {% if username %} true {% else %} false {% endif %};
+
+        const scoreDisplay = document.getElementById('current-score');
+        const wordBox = document.getElementById('word-box');
+        const messageBox = document.getElementById('message');
+        const wordCount = document.getElementById('word-count');
+        const foundWordsList = document.getElementById('found-words-list');
+
+        // Load correct score and found words on page load
+        if (isLoggedIn) {
+            score = parseInt("{{ score }}") || 0;
+            foundWords = {% if found_words %} {{ found_words | tojson }} {% else %} [] {% endif %};
+            
+            foundWords.forEach(word => {
+                const li = document.createElement('li');
+                li.textContent = word;
+                foundWordsList.appendChild(li);
+            });
+            wordCount.textContent = foundWords.length;
+        } else {
+            const savedScore = localStorage.getItem('guest_score');
+            score = savedScore ? parseInt(savedScore, 10) : 0;
+
+            const savedWords = localStorage.getItem('guest_found_words');
+            if (savedWords) {
+                foundWords = JSON.parse(savedWords);
+                foundWords.forEach(word => {
+                    const li = document.createElement('li');
+                    li.textContent = word;
+                    foundWordsList.appendChild(li);
+                });
+                wordCount.textContent = foundWords.length;
+            }
+        }
+        
+        scoreDisplay.textContent = score;
+
+        function addLetter(letter) {
+            currentWord += letter;
+            updateWordBox();
+            messageBox.textContent = '';
+        }
+
+        function deleteLetter() {
+            currentWord = currentWord.slice(0, -1);
+            updateWordBox();
+            messageBox.textContent = '';
+        }
+
+        function updateWordBox() {
+            let html = '';
+            for (let char of currentWord) {
+                if (char === centerLetter) {
+                    html += `<span class="center-letter">${char}</span>`;
+                } else {
+                    html += char;
+                }
+            }
+            wordBox.innerHTML = html;
+        }
+
+        function shuffleLetters() {
+            const outerButtons = document.querySelectorAll('.outer-letter');
+            let letters = Array.from(outerButtons).map(btn => btn.textContent);
+            
+            for (let i = letters.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [letters[i], letters[j]] = [letters[j], letters[i]];
+            }
+            
+            outerButtons.forEach((btn, index) => {
+                const newLetter = letters[index];
+                btn.textContent = newLetter;
+                btn.setAttribute('onclick', `addLetter('${newLetter}')`);
+            });
+        }
+
+        async function submitWord() {
+            if (currentWord.length < 4) {
+                messageBox.style.color = '#d90000';
+                messageBox.textContent = 'Word is too short (minimum 4 letters)';
+                return;
+            }
+
+            if (!currentWord.includes(centerLetter)) {
+                messageBox.style.color = '#d90000';
+                messageBox.textContent = 'Must include center letter (K)';
+                return;
+            }
+
+            if (foundWords.includes(currentWord)) {
+                messageBox.style.color = '#d90000';
+                messageBox.textContent = 'Already found!';
+                return;
+            }
+
+            try {
+                const response = await fetch('/submit_word', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ word: currentWord })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    foundWords.push(currentWord);
+                    
+                    if (isLoggedIn) {
+                        score = data.score;
+                    } else {
+                        score += data.points;
+                        localStorage.setItem('guest_score', score);
+                        localStorage.setItem('guest_found_words', JSON.stringify(foundWords));
+                    }
+                    
+                    scoreDisplay.textContent = score;
+                    
+                    const li = document.createElement('li');
+                    li.textContent = currentWord;
+                    foundWordsList.appendChild(li);
+                    wordCount.textContent = foundWords.length;
+
+                    messageBox.style.color = '#008000';
+                    messageBox.textContent = 'Great job!';
+                    setTimeout(() => { 
+                        messageBox.textContent = ''; 
+                    }, 2000);
+
+                    currentWord = '';
+                    updateWordBox();
+                } else {
+                    messageBox.style.color = '#d90000';
+                    messageBox.textContent = data.message || 'Error submitting word';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                messageBox.style.color = '#d90000';
+                messageBox.textContent = 'Server connection error';
+            }
+        }
+    </script>
+
+</body>
+</html>
