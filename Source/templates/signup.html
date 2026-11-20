@@ -1,182 +1,93 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Spelling Bee - Sign Up</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+{% extends "base.html" %}
 
-        h1 {
-            color: #333;
-            margin-top: 0;
-            margin-bottom: 20px;
-            text-align: center;
-        }
+{% block title %}Spelling Bee - Sign Up{% endblock %}
+{% block container_class %}auth-container{% endblock %}
 
-        .container {
-            width: 400px;
-            background-color: #ffffff;
-            border: 2px solid #ccc;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+{% block content %}
+    <h1>Create Account</h1>
 
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #aaa;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-
-        .error-message {
-            color: #d90000;
-            background-color: #ffe6e6;
-            border: 1px solid #ffb3b3;
-            padding: 8px;
-            font-size: 13px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 10px;
-            background-color: #e0e0e0;
-            border: 1px solid #999;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 5px;
-        }
-
-        .btn-submit:hover {
-            background-color: #d0d0d0;
-        }
-
-        .nav-section {
-            text-align: center;
-            border-top: 1px dashed #ccc;
-            padding-top: 15px;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        a {
-            color: #0066cc;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <h1>Create Account</h1>
-
-        <!-- Error Message Container -->
-        <div id="error-box" class="error-message"></div>
-
-        <form id="signup-form" action="/signup" method="POST">
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username">
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email">
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password">
-            </div>
-
-            <div class="form-group">
-                <label for="confirm-password">Confirm Password</label>
-                <input type="password" id="confirm-password" name="confirm_password">
-            </div>
-
-            <button type="submit" class="btn-submit">Sign Up</button>
-        </form>
-
-        <div class="nav-section">
-            Already have an account? <a href="login.html">Log In</a> | <a href="index.html">Back to Game</a>
-        </div>
+    <div id="error-box" class="error-message" {% if error %}style="display: block;"{% endif %}>
+        {{ error or '' }}
     </div>
 
-    <script>
-        const form = document.getElementById('signup-form');
-        const errorBox = document.getElementById('error-box');
+    <form id="signup-form" action="{{ url_for('signup') }}" method="POST">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" value="{{ username or '' }}">
+        </div>
 
-        form.addEventListener('submit', function (e) {
-            const username = document.getElementById('username').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" value="{{ email or '' }}">
+        </div>
 
-            errorBox.style.display = 'none';
-            errorBox.textContent = '';
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password">
+        </div>
 
-            // Check for empty inputs
-            if (username === '' || email === '' || password === '' || confirmPassword === '') {
-                e.preventDefault();
-                showError('All fields are required.');
-                return;
-            }
+        <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" name="confirm_password">
+        </div>
 
-            if (username.length < 3) {
-                e.preventDefault();
-                showError('Username must be at least 3 characters long.');
-                return;
-            }
+        <button type="submit" class="btn-submit">Sign Up</button>
+    </form>
 
-            if (!email.includes('@') || !email.includes('.')) {
-                e.preventDefault();
-                showError('Please enter a valid email address.');
-                return;
-            }
+    <div class="nav-section">
+        Already have an account? <a href="{{ url_for('login') }}">Log In</a> | 
+        <a href="{{ url_for('index') }}">Back to Game</a>
+    </div>
+{% endblock %}
 
-            if (password.length < 6) {
-                e.preventDefault();
-                showError('Password must be at least 6 characters long.');
-                return;
-            }
+{% block scripts %}
+<script>
+    const form = document.getElementById('signup-form');
+    const errorBox = document.getElementById('error-box');
 
-            // Check if passwords match
-            if (password !== confirmPassword) {
-                e.preventDefault();
-                showError('Passwords do not match.');
-                return;
-            }
-        });
+    form.addEventListener('submit', function (e) {
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
 
-        function showError(msg) {
-            errorBox.textContent = msg;
-            errorBox.style.display = 'block';
+        errorBox.style.display = 'none';
+        errorBox.textContent = '';
+
+        if (username === '' || email === '' || password === '' || confirmPassword === '') {
+            e.preventDefault();
+            showError('All fields are required.');
+            return;
         }
-    </script>
 
-</body>
-</html>
+        if (username.length < 3) {
+            e.preventDefault();
+            showError('Username must be at least 3 characters long.');
+            return;
+        }
+
+        if (!email.includes('@') || !email.includes('.')) {
+            e.preventDefault();
+            showError('Please enter a valid email address.');
+            return;
+        }
+
+        if (password.length < 6) {
+            e.preventDefault();
+            showError('Password must be at least 6 characters long.');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            e.preventDefault();
+            showError('Passwords do not match.');
+            return;
+        }
+    });
+
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+    }
+</script>
+{% endblock %}

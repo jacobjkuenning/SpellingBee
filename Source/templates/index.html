@@ -1,261 +1,100 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Spelling Bee Clone</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+{% extends "base.html" %}
 
-        h1 {
-            color: #333;
-            margin-top: 0;
-            margin-bottom: 5px;
-            text-align: center;
-        }
+{% block title %}Spelling Bee{% endblock %}
 
-        .container {
-            width: 450px;
-            background-color: #ffffff;
-            border: 2px solid #ccc;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+{% block content %}
+    <!-- Top Navigation Links -->
+    <div class="top-nav">
+        {% if username %}
+            <span>Logged in as: <strong>{{ username }}</strong></span> | 
+            <a href="{{ url_for('logout') }}">Log Out</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Log In</a> | 
+            <a href="{{ url_for('signup') }}">Sign Up</a>
+        {% endif %}
+    </div>
 
-        .top-nav {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
+    <h1>Spelling Bee</h1>
+    
+    <!-- Current Score Display -->
+    <div class="score-display">Score: <span id="current-score">0</span></div>
 
-        .top-nav a {
-            color: #0066cc;
-            text-decoration: none;
-        }
+    <!-- Where typed letters appear -->
+    <div class="word-box" id="word-box"></div>
 
-        .top-nav a:hover {
-            text-decoration: underline;
-        }
+    <!-- Feedback Message -->
+    <div class="message-box" id="message"></div>
 
-        .score-display {
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            color: #555;
-            margin-bottom: 15px;
-        }
-
-        .word-box {
-            font-size: 24px;
-            font-weight: bold;
-            height: 40px;
-            border: 1px solid #aaa;
-            margin-bottom: 20px;
-            padding: 5px;
-            text-align: center;
-            background-color: #fafafa;
-            letter-spacing: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .center-letter {
-            color: #d9a000;
-        }
-
-        .hive {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .hive-row {
-            margin-bottom: 5px;
-        }
-
-        .letter-btn {
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            font-weight: bold;
-            background-color: #e0e0e0;
-            border: 1px solid #999;
-            cursor: pointer;
-            margin: 2px;
-            border-radius: 4px;
-        }
-
-        .letter-btn:hover {
-            background-color: #d0d0d0;
-        }
-
-        .center-btn {
-            background-color: #f7da21;
-        }
-
-        .center-btn:hover {
-            background-color: #e5c810;
-        }
-
-        .action-btns {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .action-btn {
-            padding: 8px 15px;
-            font-size: 14px;
-            margin: 0 3px;
-            cursor: pointer;
-            background-color: #e0e0e0;
-            border: 1px solid #999;
-        }
-
-        .action-btn:hover {
-            background-color: #d0d0d0;
-        }
-
-        .word-list-section {
-            border-top: 1px dashed #ccc;
-            padding-top: 15px;
-            margin-bottom: 20px;
-        }
-
-        .found-words {
-            list-style-type: square;
-            padding-left: 20px;
-            max-height: 100px;
-            overflow-y: auto;
-        }
-
-        .message-box {
-            text-align: center;
-            font-size: 13px;
-            color: #d90000;
-            height: 20px;
-            margin-bottom: 10px;
-        }
-
-        .nav-section {
-            text-align: center;
-            border-top: 1px dashed #ccc;
-            padding-top: 15px;
-        }
-
-        .btn-link {
-            display: inline-block;
-            padding: 8px 15px;
-            background-color: #e0e0e0;
-            border: 1px solid #999;
-            color: #000;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .btn-link:hover {
-            background-color: #d0d0d0;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <!-- Top Navigation Links -->
-        <div class="top-nav">
-            {% if username %}
-                <span>Logged in as: <strong>{{ username }}</strong></span> | 
-                <a href="{{ url_for('logout') }}">Log Out</a>
-            {% else %}
-                <a href="{{ url_for('login') }}">Log In</a> | 
-                <a href="{{ url_for('signup') }}">Sign Up</a>
-            {% endif %}
+    <!-- Dynamic Honeycomb Layout -->
+    {% set outer_letters = letters | reject('equalto', center_letter) | list %}
+    <div class="hive">
+        <div class="hive-row" id="top-hive">
+            <button class="letter-btn outer-letter" onclick="addLetter('{{ outer_letters[0] }}')">{{ outer_letters[0] }}</button>
+            <button class="letter-btn outer-letter" onclick="addLetter('{{ outer_letters[1] }}')">{{ outer_letters[1] }}</button>
         </div>
-
-        <h1>Spelling Bee</h1>
-        
-        <!-- Current Score Display -->
-        <div class="score-display">Score: <span id="current-score">0</span></div>
-
-        <!-- Where typed letters appear -->
-        <div class="word-box" id="word-box"></div>
-
-        <!-- Feedback Message -->
-        <div class="message-box" id="message"></div>
-
-        <!-- Honeycomb Layout -->
-        <div class="hive">
-            <div class="hive-row" id="top-hive">
-                <button class="letter-btn outer-letter" onclick="addLetter('E')">E</button>
-                <button class="letter-btn outer-letter" onclick="addLetter('T')">T</button>
-            </div>
-            <div class="hive-row" id="middle-hive">
-                <button class="letter-btn outer-letter" onclick="addLetter('L')">L</button>
-                <button class="letter-btn center-btn" onclick="addLetter('K')">K</button>
-                <button class="letter-btn outer-letter" onclick="addLetter('A')">A</button>
-            </div>
-            <div class="hive-row" id="bottom-hive">
-                <button class="letter-btn outer-letter" onclick="addLetter('B')">B</button>
-                <button class="letter-btn outer-letter" onclick="addLetter('S')">S</button>
-            </div>
+        <div class="hive-row" id="middle-hive">
+            <button class="letter-btn outer-letter" onclick="addLetter('{{ outer_letters[2] }}')">{{ outer_letters[2] }}</button>
+            <button class="letter-btn center-btn" onclick="addLetter('{{ center_letter }}')">{{ center_letter }}</button>
+            <button class="letter-btn outer-letter" onclick="addLetter('{{ outer_letters[3] }}')">{{ outer_letters[3] }}</button>
         </div>
-
-        <!-- Action Controls -->
-        <div class="action-btns">
-            <button class="action-btn" onclick="deleteLetter()">Delete</button>
-            <button class="action-btn" onclick="shuffleLetters()">Shuffle</button>
-            <button class="action-btn" onclick="submitWord()">Enter</button>
-        </div>
-
-        <!-- Found Words Section -->
-        <div class="word-list-section">
-            <h3>Words Found (<span id="word-count">0</span>)</h3>
-            <ul class="found-words" id="found-words-list">
-                <!-- Dynamically populated found words -->
-            </ul>
-        </div>
-
-        <!-- Navigation Link to Leaderboard -->
-        <div class="nav-section">
-            <a href="{{ url_for('leaderboard') }}" class="btn-link">View Leaderboard</a>
+        <div class="hive-row" id="bottom-hive">
+            <button class="letter-btn outer-letter" onclick="addLetter('{{ outer_letters[4] }}')">{{ outer_letters[4] }}</button>
+            <button class="letter-btn outer-letter" onclick="addLetter('{{ outer_letters[5] }}')">{{ outer_letters[5] }}</button>
         </div>
     </div>
 
-    <script>
-        let currentWord = '';
-        const centerLetter = 'K';
-        let foundWords = [];
-        let score = 0;
+    <!-- Action Controls -->
+    <div class="action-btns">
+        <button class="action-btn" onclick="deleteLetter()">Delete</button>
+        <button class="action-btn" onclick="shuffleLetters()">↻ Shuffle</button>
+        <button class="action-btn enter-btn" onclick="submitWord()">Enter</button>
+    </div>
 
-        // Boolean check for login status
-        const isLoggedIn = {% if username %} true {% else %} false {% endif %};
+    <!-- Found Words Section -->
+    <div class="word-list-section">
+        <h3>Words Found (<span id="word-count">0</span>)</h3>
+        <ul class="found-words" id="found-words-list"></ul>
+    </div>
 
-        const scoreDisplay = document.getElementById('current-score');
-        const wordBox = document.getElementById('word-box');
-        const messageBox = document.getElementById('message');
-        const wordCount = document.getElementById('word-count');
-        const foundWordsList = document.getElementById('found-words-list');
+    <!-- Navigation Link to Leaderboard -->
+    <div class="nav-section">
+        <a href="{{ url_for('leaderboard') }}" class="btn-link">View Leaderboard</a>
+    </div>
+{% endblock %}
 
-        // Load correct score and found words on page load
-        if (isLoggedIn) {
-            score = parseInt("{{ score }}") || 0;
-            foundWords = {% if found_words %} {{ found_words | tojson }} {% else %} [] {% endif %};
-            
-            foundWords.forEach(word => {
-                const li = document.createElement('li');
-                li.textContent = word;
-                foundWordsList.appendChild(li);
-            });
-            wordCount.textContent = foundWords.length;
+{% block scripts %}
+<script>
+    let currentWord = '';
+    const centerLetter = {{ center_letter | tojson }};
+    const allowedLetters = {{ letters | tojson }};
+    const puzzleDate = {{ puzzle_date | tojson }};
+    let foundWords = [];
+    let score = 0;
+
+    const isLoggedIn = {% if username %} true {% else %} false {% endif %};
+
+    const scoreDisplay = document.getElementById('current-score');
+    const wordBox = document.getElementById('word-box');
+    const messageBox = document.getElementById('message');
+    const wordCount = document.getElementById('word-count');
+    const foundWordsList = document.getElementById('found-words-list');
+
+    if (isLoggedIn) {
+        score = parseInt("{{ score }}", 10) || 0;
+        foundWords = {% if found_words %} {{ found_words | tojson }} {% else %} [] {% endif %};
+        
+        foundWords.forEach(word => {
+            const li = document.createElement('li');
+            li.textContent = word;
+            foundWordsList.appendChild(li);
+        });
+        wordCount.textContent = foundWords.length;
+    } else {
+        const savedDate = localStorage.getItem('guest_puzzle_date');
+        if (savedDate !== puzzleDate) {
+            localStorage.setItem('guest_puzzle_date', puzzleDate);
+            localStorage.setItem('guest_score', '0');
+            localStorage.setItem('guest_found_words', JSON.stringify([]));
         } else {
             const savedScore = localStorage.getItem('guest_score');
             score = savedScore ? parseInt(savedScore, 10) : 0;
@@ -271,116 +110,136 @@
                 wordCount.textContent = foundWords.length;
             }
         }
+    }
+    
+    scoreDisplay.textContent = score;
+
+    document.addEventListener('keydown', (event) => {
+        if (event.ctrlKey || event.metaKey || event.altKey) return;
         
-        scoreDisplay.textContent = score;
-
-        function addLetter(letter) {
-            currentWord += letter;
-            updateWordBox();
-            messageBox.textContent = '';
+        const key = event.key.toUpperCase();
+        if (key === 'BACKSPACE') {
+            event.preventDefault();
+            deleteLetter();
+        } else if (key === 'ENTER') {
+            event.preventDefault();
+            submitWord();
+        } else if (key === ' ') {
+            event.preventDefault();
+            shuffleLetters();
+        } else if (/^[A-Z]$/.test(key) && allowedLetters.includes(key)) {
+            addLetter(key);
         }
+    });
 
-        function deleteLetter() {
-            currentWord = currentWord.slice(0, -1);
-            updateWordBox();
-            messageBox.textContent = '';
-        }
+    function addLetter(letter) {
+        currentWord += letter;
+        updateWordBox();
+        messageBox.textContent = '';
+    }
 
-        function updateWordBox() {
-            let html = '';
-            for (let char of currentWord) {
-                if (char === centerLetter) {
-                    html += `<span class="center-letter">${char}</span>`;
-                } else {
-                    html += char;
-                }
+    function deleteLetter() {
+        currentWord = currentWord.slice(0, -1);
+        updateWordBox();
+        messageBox.textContent = '';
+    }
+
+    function updateWordBox() {
+        let html = '';
+        for (let char of currentWord) {
+            if (char === centerLetter) {
+                html += `<span class="center-letter">${char}</span>`;
+            } else {
+                html += char;
             }
-            wordBox.innerHTML = html;
+        }
+        wordBox.innerHTML = html;
+    }
+
+    function shuffleLetters() {
+        const outerButtons = document.querySelectorAll('.outer-letter');
+        let letters = Array.from(outerButtons).map(btn => btn.textContent);
+        
+        for (let i = letters.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [letters[i], letters[j]] = [letters[j], letters[i]];
+        }
+        
+        outerButtons.forEach((btn, index) => {
+            const newLetter = letters[index];
+            btn.textContent = newLetter;
+            btn.setAttribute('onclick', `addLetter('${newLetter}')`);
+        });
+    }
+
+    async function submitWord() {
+        if (currentWord.length < 4) {
+            messageBox.style.color = '#d90000';
+            messageBox.textContent = 'Word is too short (minimum 4 letters)';
+            return;
         }
 
-        function shuffleLetters() {
-            const outerButtons = document.querySelectorAll('.outer-letter');
-            let letters = Array.from(outerButtons).map(btn => btn.textContent);
-            
-            for (let i = letters.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [letters[i], letters[j]] = [letters[j], letters[i]];
-            }
-            
-            outerButtons.forEach((btn, index) => {
-                const newLetter = letters[index];
-                btn.textContent = newLetter;
-                btn.setAttribute('onclick', `addLetter('${newLetter}')`);
+        if (!currentWord.includes(centerLetter)) {
+            messageBox.style.color = '#d90000';
+            messageBox.textContent = `Must include center letter (${centerLetter})`;
+            return;
+        }
+
+        if (foundWords.includes(currentWord)) {
+            messageBox.style.color = '#d90000';
+            messageBox.textContent = 'Already found!';
+            return;
+        }
+
+        try {
+            const response = await fetch('/submit_word', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ word: currentWord })
             });
-        }
 
-        async function submitWord() {
-            if (currentWord.length < 4) {
-                messageBox.style.color = '#d90000';
-                messageBox.textContent = 'Word is too short (minimum 4 letters)';
-                return;
-            }
+            const data = await response.json();
 
-            if (!currentWord.includes(centerLetter)) {
-                messageBox.style.color = '#d90000';
-                messageBox.textContent = 'Must include center letter (K)';
-                return;
-            }
-
-            if (foundWords.includes(currentWord)) {
-                messageBox.style.color = '#d90000';
-                messageBox.textContent = 'Already found!';
-                return;
-            }
-
-            try {
-                const response = await fetch('/submit_word', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ word: currentWord })
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    foundWords.push(currentWord);
-                    
-                    if (isLoggedIn) {
-                        score = data.score;
-                    } else {
-                        score += data.points;
-                        localStorage.setItem('guest_score', score);
-                        localStorage.setItem('guest_found_words', JSON.stringify(foundWords));
-                    }
-                    
-                    scoreDisplay.textContent = score;
-                    
-                    const li = document.createElement('li');
-                    li.textContent = currentWord;
-                    foundWordsList.appendChild(li);
-                    wordCount.textContent = foundWords.length;
-
-                    messageBox.style.color = '#008000';
-                    messageBox.textContent = 'Great job!';
-                    setTimeout(() => { 
-                        messageBox.textContent = ''; 
-                    }, 2000);
-
-                    currentWord = '';
-                    updateWordBox();
+            if (response.ok && data.success) {
+                foundWords.push(currentWord);
+                
+                if (isLoggedIn) {
+                    score = data.score;
                 } else {
-                    messageBox.style.color = '#d90000';
-                    messageBox.textContent = data.message || 'Error submitting word';
+                    score += data.points;
+                    localStorage.setItem('guest_score', score);
+                    localStorage.setItem('guest_found_words', JSON.stringify(foundWords));
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                messageBox.style.color = '#d90000';
-                messageBox.textContent = 'Server connection error';
-            }
-        }
-    </script>
+                
+                scoreDisplay.textContent = score;
+                
+                const li = document.createElement('li');
+                li.textContent = currentWord;
+                foundWordsList.appendChild(li);
+                wordCount.textContent = foundWords.length;
 
-</body>
-</html>
+                messageBox.style.color = '#008000';
+                messageBox.textContent = data.is_pangram 
+                    ? `Pangram! +${data.points} pts` 
+                    : `Great job! +${data.points} pt${data.points > 1 ? 's' : ''}`;
+                    
+                setTimeout(() => { 
+                    messageBox.textContent = ''; 
+                }, 2000);
+
+                currentWord = '';
+                updateWordBox();
+            } else {
+                messageBox.style.color = '#d90000';
+                messageBox.textContent = data.message || 'Error submitting word';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            messageBox.style.color = '#d90000';
+            messageBox.textContent = 'Server connection error';
+        }
+    }
+</script>
+{% endblock %}
